@@ -8735,6 +8735,10 @@ ERROR(invalid_value_for_type_same_type,none,
 
 ERROR(nonliteral_integer_generic_value,none,
       "generic value must be an integer literal", ())
+ERROR(nonliteral_integer_expr_generic_value,none,
+      "generic value must be an integer literal expression", ())
+ERROR(integer_generic_expr_closure_not_supported,none,
+      "closures are not supported in generic value literal expressions", ())
 
 //===----------------------------------------------------------------------===//
 // MARK: InlineArray

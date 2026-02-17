@@ -41,6 +41,7 @@ namespace swift {
   class DeclRefTypeRepr;
   class TupleTypeRepr;
   class TypeDecl;
+  class IntegerLiteralExpr;
 
 enum class ParamSpecifier : uint8_t;
 
@@ -1650,35 +1651,43 @@ private:
   friend class TypeRepr;
 };
 
-/// A TypeRepr for an integer appearing in a type position.
-class IntegerTypeRepr final : public TypeRepr {
-  Expr *ValueExpr;
+class GenericArgumentExprTypeRepr final : public TypeRepr {
+  /// Exactly the expr the programmer wrote
+  Expr *originalArgExpr;
+
+  /// Generic argument resolved to either a `TypeExpr`, `IntegerLiteralExpr`,
+  /// or `ErrorExpr`
+  Expr *resolvedExpr;
+
+  /// Required for being able to render the extracted text
+  /// of the original expression
+  ASTContext *Ctx;
 
 public:
-<<<<<<< Updated upstream
-  IntegerTypeRepr(Expr *valueExpr)
-    : TypeRepr(TypeReprKind::Integer), ValueExpr(valueExpr) {}
-=======
-  IntegerTypeRepr(Expr *valueExpr, std::optional<Identifier> label)
-      : TypeRepr(TypeReprKind::Integer), ValueExpr(valueExpr), Label(label) {}
+  GenericArgumentExprTypeRepr(Expr *E, ASTContext *Ctx)
+      : TypeRepr(TypeReprKind::GenericArgumentExpr), originalArgExpr(E),
+        resolvedExpr(nullptr), Ctx(Ctx) {}
 
-  IntegerTypeRepr(Expr *valueExpr)
-      : TypeRepr(TypeReprKind::Integer), ValueExpr(valueExpr),
-        Label(std::nullopt) {}
->>>>>>> Stashed changes
+  // TODO: Use in indexing
+  Expr *getOriginalArgExpr() const { return originalArgExpr; }
+  Expr *getArgExpr() const { return resolvedExpr; }
+  void setArgExpr(Expr *E);
 
-  Expr *getValue() const { return ValueExpr; }
+  TypeExpr *getAsResolvedTypeExpr() const;
+  IntegerLiteralExpr *getAsResolvedIntegerLiteralExpr() const;
+  bool failedToResolve() const;
 
   SourceLoc getLoc() const;
 
   static bool classof(const TypeRepr *T) {
-    return T->getKind() == TypeReprKind::Integer;
+    return T->getKind() == TypeReprKind::GenericArgumentExpr;
   }
 
 private:
-  SourceLoc getStartLocImpl() const { return getLoc(); }
+  SourceLoc getStartLocImpl() const;
   SourceLoc getEndLocImpl() const;
   SourceLoc getLocImpl() const { return getLoc(); }
+  StringRef getExprText(SmallVectorImpl<char> &scratch) const;
   void printImpl(ASTPrinter &Printer, const PrintOptions &opts,
                  NonRecursivePrintOptions nrOpts) const;
   friend class TypeRepr;
@@ -1720,7 +1729,7 @@ inline bool TypeRepr::isSimple() const {
   case TypeReprKind::CompileTimeLiteral:
   case TypeReprKind::ConstValue:
   case TypeReprKind::LifetimeDependent:
-  case TypeReprKind::Integer:
+  case TypeReprKind::GenericArgumentExpr:
   case TypeReprKind::CallerIsolated:
     return true;
   }
