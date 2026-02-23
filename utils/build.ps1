@@ -2243,8 +2243,12 @@ function Get-CompilersDefines([Hashtable] $Platform, [string] $Variant, [switch]
     SWIFT_ENABLE_EXPERIMENTAL_DISTRIBUTED = "YES";
     SWIFT_ENABLE_EXPERIMENTAL_OBSERVATION = "YES";
     SWIFT_ENABLE_EXPERIMENTAL_STRING_PROCESSING = "YES";
-    SWIFT_ENABLE_RUNTIME_MODULE = "YES";
-    SWIFT_ENABLE_BACKTRACING = $(if ($Platform.OS -ne [OS]::Windows -or $Platform.Architecture.ShortName -ne "x86") {
+    SWIFT_ENABLE_RUNTIME_MODULE = $(if ($Platform.OS -eq [OS]::Windows) {
+        "YES"
+      } else {
+        "NO"
+      });
+    SWIFT_ENABLE_BACKTRACING = $(if ($Platform.OS -eq [OS]::Windows -and $Platform.Architecture.ShortName -ne "x86") {
         "YES"
       } else {
         "NO"
@@ -2731,8 +2735,12 @@ function Build-Runtime([Hashtable] $Platform) {
       SWIFT_ENABLE_EXPERIMENTAL_OBSERVATION = "YES";
       SWIFT_ENABLE_EXPERIMENTAL_STRING_PROCESSING = "YES";
       SWIFT_ENABLE_SYNCHRONIZATION = "YES";
-      SWIFT_ENABLE_RUNTIME_MODULE = "YES";
-      SWIFT_ENABLE_BACKTRACING = $(if ($Platform.OS -ne [OS]::Windows -or $Platform.Architecture.ShortName -ne "x86") {
+      SWIFT_ENABLE_RUNTIME_MODULE = $(if ($Platform.OS -eq [OS]::Windows) {
+          "YES"
+        } else {
+          "NO"
+        });
+      SWIFT_ENABLE_BACKTRACING = $(if ($Platform.OS -eq [OS]::Windows -and $Platform.Architecture.ShortName -ne "x86") {
           "YES"
         } else {
           "NO"
