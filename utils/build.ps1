@@ -3037,29 +3037,31 @@ function Build-ExperimentalRuntime([Hashtable] $Platform, [switch] $Static = $fa
         SwiftVolatile_ENABLE_LIBRARY_EVOLUTION = "NO";
       }
 
-    Build-CMakeProject `
-      -Src $SourceCache\swift\Runtimes\Supplemental\Runtime `
-      -Bin $RuntimeModuleBinaryCache `
-      -InstallTo "${SDKROOT}\usr" `
-      -Platform $Platform `
-      -UseBuiltCompilers C,CXX,Swift `
-      -SwiftSDK $null `
-      -UseGNUDriver `
-      -Defines @{
-        BUILD_SHARED_LIBS = if ($Static) { "NO" } else { "YES" };
-        CMAKE_FIND_PACKAGE_PREFER_CONFIG = "YES";
-        CMAKE_STATIC_LIBRARY_PREFIX_Swift = "lib";
+    if ($Platform.OS -eq [OS]::Windows) {
+      Build-CMakeProject `
+        -Src $SourceCache\swift\Runtimes\Supplemental\Runtime `
+        -Bin $RuntimeModuleBinaryCache `
+        -InstallTo "${SDKROOT}\usr" `
+        -Platform $Platform `
+        -UseBuiltCompilers C,CXX,Swift `
+        -SwiftSDK $null `
+        -UseGNUDriver `
+        -Defines @{
+          BUILD_SHARED_LIBS = if ($Static) { "NO" } else { "YES" };
+          CMAKE_FIND_PACKAGE_PREFER_CONFIG = "YES";
+          CMAKE_STATIC_LIBRARY_PREFIX_Swift = "lib";
 
-        SwiftCore_DIR = "${RuntimeBinaryCache}\cmake\SwiftCore";
-        SwiftOverlay_DIR = "${OverlayBinaryCache}\cmake\SwiftOverlay";
-        SwiftCxxOverlay_DIR = "${OverlayBinaryCache}\Cxx\cmake\SwiftCxxOverlay";
+          SwiftCore_DIR = "${RuntimeBinaryCache}\cmake\SwiftCore";
+          SwiftOverlay_DIR = "${OverlayBinaryCache}\cmake\SwiftOverlay";
+          SwiftCxxOverlay_DIR = "${OverlayBinaryCache}\Cxx\cmake\SwiftCxxOverlay";
 
-        # FIXME(compnerd) this currently causes a build failure on Windows, but
-        # this should be enabled when building the dynamic runtime.
-        SwiftRuntime_ENABLE_LIBRARY_EVOLUTION = "NO";
+          # FIXME(compnerd) this currently causes a build failure on Windows, but
+          # this should be enabled when building the dynamic runtime.
+          SwiftRuntime_ENABLE_LIBRARY_EVOLUTION = "NO";
 
-        SwiftRuntime_ENABLE_BACKTRACING = "YES";
-      }
+          SwiftRuntime_ENABLE_BACKTRACING = "YES";
+        }
+    }
   }
 }
 
@@ -3380,7 +3382,7 @@ function Build-ExperimentalSDK([Hashtable] $Platform) {
 
     # NOTE: we only build this if static variants are enabled to ensure that we
     # can statically link the runtime.
-    if ($Platform.Architecture.ShortName -ne "x86") {
+    if ($Platform.OS -eq [OS]::Windows -and $Platform.Architecture.ShortName -ne "x86") {
       Record-OperationTime $Platform "Build-ExperimentalBacktrace" {
         Invoke-IsolatingEnvVars {
           $env:Path = "$(Get-CMarkBinaryCache $Platform)\src;$(Get-PinnedToolchainRuntime);${env:Path}"
