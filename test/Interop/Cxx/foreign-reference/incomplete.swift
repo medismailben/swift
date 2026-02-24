@@ -42,8 +42,8 @@ func testOpaqueRef() {
 struct HasOpaqueRef { var mine: OpaqueRef }
 
 func testOpaqueRefInStruct() {
-  var cat : HasOpaqueRef? = nil;
-	cat = HasOpaqueRef(mine: Opaque_create())
+  var cat : HasOpaqueRef? = nil
+  cat = HasOpaqueRef(mine: Opaque_create())
   // CHECK: Destroyed OpaqueRef instance
   // CHECK-NOT: Destroyed OpaqueRef instance
 }
